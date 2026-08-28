@@ -604,6 +604,9 @@ void OpdsBookBrowserActivity::downloadAllNew() {
   batchStatus = {};
   batchRenderedPercent = -1;
   batchProgressUpdateMs = 0;
+  // The catalog is fetched again after the batch, so release its strings before
+  // OpdsBatchDownload parses another page into memory.
+  releaseEntries();
   requestUpdate(true);
 
   const OpdsBatchDownload::Observer observer{this, &OpdsBookBrowserActivity::onBatchProgress};
@@ -628,7 +631,6 @@ void OpdsBookBrowserActivity::downloadAllNew() {
   // walk's last page does not stay on screen).
   state = BrowserState::LOADING;
   statusMessage = tr(STR_LOADING);
-  releaseEntries();
   selectorIndex = 0;
   requestUpdate(true);
   fetchFeed(currentPath);
