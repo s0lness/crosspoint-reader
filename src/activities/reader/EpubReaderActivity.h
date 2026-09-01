@@ -171,6 +171,8 @@ class EpubReaderActivity final : public ReaderActivity {
   void addBookmark();
   void updateBookmarkFlag();
 
+  // Footnote navigation
+  void runFootnoteShortcut();
   void navigateToHref(const std::string& href, bool savePosition = false);
   void restoreSavedPosition();
 

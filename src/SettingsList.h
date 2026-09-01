@@ -181,10 +181,15 @@ inline SettingInfo buildDictionarySetting(const std::vector<DictionaryEntry>& di
 }
 
 inline std::vector<StrId> buildLongPressMenuValues() {
-  static constexpr StrId VALUES[] = {StrId::STR_KOSYNC, StrId::STR_DISABLED, StrId::STR_BOOKMARK_OPTION,
-                                     StrId::STR_DICTIONARY, StrId::STR_READER_MENU};
-  const size_t count = BoardConfig::hasHomeKey() ? std::size(VALUES) : std::size(VALUES) - 1;
-  return {VALUES, VALUES + count};
+  // Values are persisted by raw index (see LONG_PRESS_MENU_FUNCTION in
+  // CrossPointSettings.h), so this list can never be compacted -- every board
+  // must see the same value at the same position, even boards that can't act
+  // on it (it silently no-ops there; see the confirmLongPressed switch in
+  // EpubReaderActivity.cpp). Reader Menu (home-key-hold only) shows on every
+  // board for that reason; Footnotes always applies regardless of home key.
+  static constexpr StrId VALUES[] = {StrId::STR_KOSYNC,      StrId::STR_DISABLED,    StrId::STR_BOOKMARK_OPTION,
+                                     StrId::STR_DICTIONARY, StrId::STR_READER_MENU, StrId::STR_FOOTNOTES};
+  return {VALUES, VALUES + std::size(VALUES)};
 }
 
 inline std::vector<StrId> homeThemeValues() {

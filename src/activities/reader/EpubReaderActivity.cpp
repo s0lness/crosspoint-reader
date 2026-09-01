@@ -559,6 +559,9 @@ void EpubReaderActivity::loop() {
       case CrossPointSettings::LP_MENU_DICTIONARY:
         openDictionaryWordSelect();
         return;
+      case CrossPointSettings::LP_MENU_FOOTNOTES:
+        runFootnoteShortcut();
+        return;
       case CrossPointSettings::LP_MENU_READER_MENU:
       case CrossPointSettings::LP_MENU_DISABLED:
       default:
@@ -632,11 +635,7 @@ void EpubReaderActivity::loop() {
       (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::FOOTNOTES &&
        mappedInput.wasReleased(MappedInputManager::Button::Power) &&
        !mappedInput.wasReleased(MappedInputManager::Button::Down))) {
-    if (footnoteDepth > 0) {
-      restoreSavedPosition();
-    } else {
-      openFootnoteSelect(false);
-    }
+    runFootnoteShortcut();
     return;
   }
 
@@ -950,6 +949,7 @@ unsigned long EpubReaderActivity::confirmLongPressThreshold() const {
   switch (SETTINGS.longPressMenuFunction) {
     case CrossPointSettings::LP_MENU_BOOKMARK:
     case CrossPointSettings::LP_MENU_DICTIONARY:
+    case CrossPointSettings::LP_MENU_FOOTNOTES:
       return ReaderUtils::BOOKMARK_HOLD_MS;
     case CrossPointSettings::LP_MENU_KOSYNC:
       return KOREADER_STORE.hasCredentials() ? ReaderUtils::GO_HOME_MS : 0;
@@ -2547,6 +2547,14 @@ void EpubReaderActivity::activateMoreRow(int row) {
   // Actions that neither open a screen nor leave the reader (a sync with no
   // credentials, say) would otherwise leave the closed panel on screen.
   if (action != MA::GO_HOME && action != MA::DELETE_CACHE) requestUpdate();
+}
+
+void EpubReaderActivity::runFootnoteShortcut() {
+  if (footnoteDepth > 0) {
+    restoreSavedPosition();
+  } else {
+    openFootnoteSelect(false);
+  }
 }
 
 void EpubReaderActivity::navigateToHref(const std::string& hrefStr, const bool savePosition) {
