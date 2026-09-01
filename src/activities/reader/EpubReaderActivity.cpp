@@ -557,6 +557,13 @@ void EpubReaderActivity::loop() {
           return;
         }
         break;
+      case CrossPointSettings::LP_MENU_FOOTNOTES:
+        if (mappedInput.getHeldTime() >= ReaderUtils::BOOKMARK_HOLD_MS && !ignoreNextConfirmRelease) {
+          ignoreNextConfirmRelease = true;
+          runFootnoteShortcut();
+          return;
+        }
+        break;
       case CrossPointSettings::LP_MENU_DISABLED:
       default:
         break;
@@ -581,23 +588,7 @@ void EpubReaderActivity::loop() {
   if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::FOOTNOTES &&
       mappedInput.wasReleased(MappedInputManager::Button::Power) &&
       !mappedInput.wasReleased(MappedInputManager::Button::Down)) {
-    if (footnoteDepth > 0) {
-      restoreSavedPosition();
-    } else {
-      if (currentPageFootnotes.size() == 1) {
-        navigateToHref(currentPageFootnotes[0].href, true);
-      } else if (currentPageFootnotes.size() > 1) {
-        startActivityForResult(
-            std::make_unique<EpubReaderFootnotesActivity>(renderer, mappedInput, currentPageFootnotes),
-            [this](const ActivityResult& result) {
-              if (!result.isCancelled) {
-                const auto& footnoteResult = std::get<FootnoteResult>(result.data);
-                navigateToHref(footnoteResult.href, true);
-              }
-              requestUpdate();
-            });
-      }
-    }
+    runFootnoteShortcut();
     return;
   }
 
@@ -1884,6 +1875,27 @@ void EpubReaderActivity::renderStatusBar() const {
 
   GUI.drawStatusBar(renderer, bookProgress, currentPage, pageCount, title, 0, textYOffset, true, currentPageBookmarked,
                     section->isBuilding());
+}
+
+void EpubReaderActivity::runFootnoteShortcut() {
+  if (footnoteDepth > 0) {
+    restoreSavedPosition();
+  } else if (currentPageFootnotes.size() == 1) {
+    navigateToHref(currentPageFootnotes[0].href, true);
+  } else if (currentPageFootnotes.size() > 1) {
+    startActivityForResult(std::make_unique<EpubReaderFootnotesActivity>(renderer, mappedInput, currentPageFootnotes),
+                           [this](const ActivityResult& result) {
+                             // When the list was opened by a Confirm long-press, the release landed in
+                             // the list activity, so the reader never cleared the flag: reset it here or
+                             // the next short Confirm press would be swallowed instead of opening the menu.
+                             ignoreNextConfirmRelease = false;
+                             if (!result.isCancelled) {
+                               const auto& footnoteResult = std::get<FootnoteResult>(result.data);
+                               navigateToHref(footnoteResult.href, true);
+                             }
+                             requestUpdate();
+                           });
+  }
 }
 
 void EpubReaderActivity::navigateToHref(const std::string& hrefStr, const bool savePosition) {

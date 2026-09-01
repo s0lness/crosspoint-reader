@@ -285,6 +285,7 @@ The Settings screen allows you to configure the device's behavior. There are a f
   - "Bookmark" (default) - Hold Confirm (~0.4 second) to drop a bookmark at the current page.
   - "KOSync" - Hold Confirm (~1 second) to launch KOReader sync directly.
   - "Dictionary" - Hold Confirm (~0.4 second) to start dictionary word selection on the current page (see [docs/dictionary.md](docs/dictionary.md)).
+  - "Footnotes" - Opens the current page's footnotes: jumps directly when there is exactly one, shows the list when there are several, and returns to the saved position when already inside a footnote.
   - "Disabled" - Long-press is ignored; only short-press opens the reader menu.
 
 - **Short Power Button Click**: Controls the effect of a short click of the power button:
@@ -586,7 +587,7 @@ If the device goes to sleep or you close the book while viewing a footnote, the 
 * **Return to Home:** Press the **Back** button to close the book and return to the **[Home](#31-home-screen)** screen.
 * **Return to Browse Files:** Press and hold the **Back** button to close the book and return to the **[Browse Files](#33-browse-files-screen)** screen.
 * **Reader Menu:** Press **Confirm** to open the **[Reader Menu](#5-reader-menu)**, which includes chapter navigation, reading options, and more.
-* **Long-press Confirm (configurable):** Holding **Confirm** runs the function chosen by the **Long-press Menu** setting in **[Controls Settings](#363-controls)** — "Bookmark" (default) drops a bookmark, "KOSync" launches KOReader Sync, "Dictionary" starts a word lookup, "Disabled" does nothing. A short press always opens the Reader Menu.
+* **Long-press Confirm (configurable):** Holding **Confirm** runs the function chosen by the **Long-press Menu** setting in **[Controls Settings](#363-controls)** — "Bookmark" (default) drops a bookmark, "KOSync" launches KOReader Sync, "Dictionary" starts a word lookup, "Footnotes" opens the current page's footnotes, and "Disabled" does nothing. A short press always opens the Reader Menu.
 
 ### Supported Languages
 

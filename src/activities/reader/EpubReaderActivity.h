@@ -190,6 +190,7 @@ class EpubReaderActivity final : public Activity {
   void updateBookmarkFlag();
 
   // Footnote navigation
+  void runFootnoteShortcut();
   void navigateToHref(const std::string& href, bool savePosition = false);
   void restoreSavedPosition();
 
