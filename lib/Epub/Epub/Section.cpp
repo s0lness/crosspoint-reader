@@ -55,7 +55,8 @@ namespace {
 // v48: Hangul words wrap at spaces; with hyphenation on they may also split at a line end.
 //      Justification no longer stretches between syllables.
 // v49: render pagebreak marker content unless it is just the page label.
-constexpr uint8_t SECTION_FILE_VERSION = 49;
+// v50: a <br> immediately before a pagebreak marker with replayed content no longer breaks the line.
+constexpr uint8_t SECTION_FILE_VERSION = 50;
 // Written into the version field while a build is in progress; patched to
 // SECTION_FILE_VERSION only when the build is finalized. An abandoned /
 // crash-interrupted .bin therefore carries version 0, which loadSectionFile rejects
