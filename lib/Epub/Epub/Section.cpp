@@ -33,7 +33,8 @@ namespace {
 // v35: Persist a uint32_t visible-text start offset for every page.
 // v37: render pagebreak marker content unless it is just the page label.
 // v38: a <br> immediately before a pagebreak marker with replayed content no longer breaks the line.
-constexpr uint8_t SECTION_FILE_VERSION = 38;
+// v39: no extra paragraph spacing at a <br> line break.
+constexpr uint8_t SECTION_FILE_VERSION = 39;
 // Written into the version field while a build is in progress; patched to
 // SECTION_FILE_VERSION only when the build is finalized. An abandoned /
 // crash-interrupted .bin therefore carries version 0, which loadSectionFile rejects
