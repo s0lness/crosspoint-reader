@@ -912,12 +912,20 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
   }
 
   // Blocks with role="doc-pagebreak" / epub:type="pagebreak" mark print-page-number
-  // markers, which should render nothing. But some converters (Calibre) mis-wrap real
-  // paragraph text inside this same element, so instead of skipping the subtree
-  // outright, capture its text speculatively; endElement (or an overflow/child-element
-  // check along the way) decides whether it's a droppable page label or real content.
+  // markers, which should render nothing. But real books misuse the attribute two ways:
+  // some converters (Calibre) wrap the continuation of the paragraph inside the marker
+  // span, and some publishers (InDesign exports) put the attribute directly on the <p>
+  // or heading that starts the print page (#3116). So: a text-bearing block element
+  // carrying the attribute renders completely normally (its content and block style
+  // matter more than hiding a label that, in that idiom, lives in the title attribute
+  // anyway), while marker-ish elements (span, a, div, hr...) capture their text
+  // speculatively; endElement (or an overflow/child-element check along the way)
+  // decides whether it's a droppable page label or real content.
   if (atts != nullptr) {
-    for (int i = 0; atts[i]; i += 2) {
+    const bool textBearingBlock = strcmp(name, "p") == 0 || strcmp(name, "blockquote") == 0 ||
+                                  strcmp(name, "li") == 0 ||
+                                  (name[0] == 'h' && name[1] >= '1' && name[1] <= '6' && name[2] == '\0');
+    for (int i = 0; !textBearingBlock && atts[i]; i += 2) {
       if ((strcmp(atts[i], "role") == 0 && strcmp(atts[i + 1], "doc-pagebreak") == 0) ||
           (strcmp(atts[i], "epub:type") == 0 && strcmp(atts[i + 1], "pagebreak") == 0)) {
         self->pagebreakCapturing = true;
