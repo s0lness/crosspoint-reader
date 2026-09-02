@@ -172,21 +172,31 @@ constexpr char SLEEP_FRAME_FILE[] = "/.crosspoint/sleep_frame.bin";
 
 static void saveSleepFrameBuffer() {
   HalFile file;
-  if (!Storage.openFileForWrite("SLP", SLEEP_FRAME_FILE, file)) return;
-  file.write(renderer.getFrameBuffer(), renderer.getBufferSize());
+  if (!Storage.openFileForWrite("SLP", SLEEP_FRAME_FILE, file)) {
+    LOG_INF("SLP", "sleep frame: open for write failed");
+    return;
+  }
+  const size_t bufferSize = renderer.getBufferSize();
+  const size_t bytesWritten = file.write(renderer.getFrameBuffer(), bufferSize);
   file.close();
+  LOG_INF("SLP", "sleep frame: wrote %u/%u bytes", (unsigned)bytesWritten, (unsigned)bufferSize);
 }
 
 static bool loadSleepFrameBuffer() {
   HalFile file;
-  if (!Storage.openFileForRead("SLP", SLEEP_FRAME_FILE, file)) return false;
+  if (!Storage.openFileForRead("SLP", SLEEP_FRAME_FILE, file)) {
+    LOG_INF("SLP", "sleep frame: open for read failed");
+    return false;
+  }
   const size_t bufferSize = display.getBufferSize();
   const size_t bytesRead = file.read(display.getFrameBuffer(), bufferSize);
   file.close();
   if (bytesRead != bufferSize) {
+    LOG_INF("SLP", "sleep frame: short read %u/%u bytes", (unsigned)bytesRead, (unsigned)bufferSize);
     Storage.remove(SLEEP_FRAME_FILE);
     return false;
   }
+  LOG_INF("SLP", "sleep frame restored, %u bytes", (unsigned)bytesRead);
   Storage.remove(SLEEP_FRAME_FILE);
   return true;
 }
@@ -202,7 +212,10 @@ void enterDeepSleep(bool fromTimeout = false) {
        SETTINGS.quickResumeSleepScreen == CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
   APP_STATE.showBootScreen = !isQuickResumeSleep;
 
-  APP_STATE.saveToFile();
+  LOG_INF("SLP", "enterDeepSleep: isQuickResumeSleep=%d fromTimeout=%d", (int)isQuickResumeSleep, (int)fromTimeout);
+
+  const bool appStateSaveOk = APP_STATE.saveToFile();
+  LOG_INF("SLP", "enterDeepSleep: APP_STATE.saveToFile() -> %d", (int)appStateSaveOk);
 
   // Commit to sleeping before goToSleep() runs the outgoing activity's onExit():
   // a WiFi activity would otherwise silentRestart() here and reboot instead.
@@ -365,6 +378,8 @@ void setup() {
   const BootResume resume = isSilentReboot              ? BootResume::Silent
                             : !APP_STATE.showBootScreen ? BootResume::QuickResume
                                                         : BootResume::Splash;
+  LOG_INF("MAIN", "Boot decision: showBootScreen=%d resume=%s", (int)APP_STATE.showBootScreen,
+          resume == BootResume::Silent ? "Silent" : resume == BootResume::QuickResume ? "QuickResume" : "Splash");
   bool allowFastInitialReaderRefresh = false;
 
   setupDisplayAndFonts(resume != BootResume::Splash);
@@ -381,6 +396,7 @@ void setup() {
       APP_STATE.showBootScreen = true;
       APP_STATE.saveToFile();
       if (loadSleepFrameBuffer()) {
+        LOG_INF("SLP", "QuickResume: sleep frame loaded");
         const bool useDifferentialRefresh = gpio.deviceIsX3();
         if (useDifferentialRefresh) {
           // begin() clears the X3 controller RAM, so restore the saved frame as
@@ -397,6 +413,7 @@ void setup() {
           renderer.displayBuffer(HalDisplay::HALF_REFRESH);
         }
       } else {
+        LOG_INF("SLP", "QuickResume: sleep frame load failed, falling back to splash");
         activityManager.goToBoot();  // frame file missing, fall back to the splash
       }
       break;
