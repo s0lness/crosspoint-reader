@@ -239,21 +239,31 @@ constexpr char SLEEP_FRAME_FILE[] = "/.crosspoint/sleep_frame.bin";
 
 static void saveSleepFrameBuffer() {
   HalFile file;
-  if (!Storage.openFileForWrite("SLP", SLEEP_FRAME_FILE, file)) return;
-  file.write(renderer.getFrameBuffer(), renderer.getBufferSize());
+  if (!Storage.openFileForWrite("SLP", SLEEP_FRAME_FILE, file)) {
+    LOG_INF("SLP", "sleep frame: open for write failed");
+    return;
+  }
+  const size_t bufferSize = renderer.getBufferSize();
+  const size_t bytesWritten = file.write(renderer.getFrameBuffer(), bufferSize);
   file.close();
+  LOG_INF("SLP", "sleep frame: wrote %u/%u bytes", (unsigned)bytesWritten, (unsigned)bufferSize);
 }
 
 static bool loadSleepFrameBuffer() {
   HalFile file;
-  if (!Storage.openFileForRead("SLP", SLEEP_FRAME_FILE, file)) return false;
+  if (!Storage.openFileForRead("SLP", SLEEP_FRAME_FILE, file)) {
+    LOG_INF("SLP", "sleep frame: open for read failed");
+    return false;
+  }
   const size_t bufferSize = display.getBufferSize();
   const size_t bytesRead = file.read(display.getFrameBuffer(), bufferSize);
   file.close();
   if (bytesRead != bufferSize) {
+    LOG_INF("SLP", "sleep frame: short read %u/%u bytes", (unsigned)bytesRead, (unsigned)bufferSize);
     Storage.remove(SLEEP_FRAME_FILE);
     return false;
   }
+  LOG_INF("SLP", "sleep frame restored, %u bytes", (unsigned)bytesRead);
   Storage.remove(SLEEP_FRAME_FILE);
   return true;
 }
@@ -271,7 +281,10 @@ void enterDeepSleep(bool fromTimeout = false) {
   // it visible until the first useful reader or home paint replaces it.
   APP_STATE.showBootScreen = false;
 
-  APP_STATE.saveToFile();
+  LOG_INF("SLP", "enterDeepSleep: isQuickResumeSleep=%d fromTimeout=%d", (int)isQuickResumeSleep, (int)fromTimeout);
+
+  const bool appStateSaveOk = APP_STATE.saveToFile();
+  LOG_INF("SLP", "enterDeepSleep: APP_STATE.saveToFile() -> %d", (int)appStateSaveOk);
 
   // Commit to sleeping before goToSleep() runs the outgoing activity's onExit():
   // a WiFi activity would otherwise silentRestart() here and reboot instead.
@@ -493,6 +506,10 @@ void setup() {
   const BootResume resume = isSilentReboot         ? BootResume::Silent
                             : isPersistedSleepWake ? BootResume::SplashlessWake
                                                    : BootResume::Splash;
+  LOG_INF("MAIN", "Boot decision: isPersistedSleepWake=%d resume=%s", (int)isPersistedSleepWake,
+          resume == BootResume::Silent    ? "Silent"
+          : resume == BootResume::SplashlessWake ? "SplashlessWake"
+                                                  : "Splash");
   bool allowFastInitialReaderRefresh = false;
   bool needsWakeRefresh = false;
 
@@ -510,6 +527,7 @@ void setup() {
       APP_STATE.showBootScreen = true;
       APP_STATE.saveToFile();
       if (Storage.exists(SLEEP_FRAME_FILE) && loadSleepFrameBuffer()) {
+        LOG_INF("SLP", "QuickResume: sleep frame loaded");
         if (gpio.deviceIsX3()) {
           // begin() clears the X3 controller RAM, so restore the saved frame as
           // the baseline for the first reader paint without refreshing the panel.
@@ -517,6 +535,7 @@ void setup() {
           allowFastInitialReaderRefresh = true;
         }
       } else {
+        LOG_INF("SLP", "QuickResume: sleep frame load failed, painting a clean refresh instead");
         // Clean the retained sleep image as part of the first Home paint.
         needsWakeRefresh = true;
       }
