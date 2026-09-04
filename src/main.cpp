@@ -14,6 +14,7 @@
 #include <HalTiltSensor.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <Memory.h>
 #include <SPI.h>
 #include <WiFi.h>
 #include <XteinkDetect.h>
@@ -539,7 +540,13 @@ void setup() {
     // Opt-in OPDS catalog sync, cold boots only: a sleep wake must stay instant,
     // and the sync's own teardown reboot comes back as BootResume::Silent, so it
     // cannot re-enter itself. It ends by going home.
-    activityManager.replaceActivity(std::make_unique<OpdsStartupSyncActivity>(renderer, mappedInputManager));
+    auto activity = makeUniqueNoThrow<OpdsStartupSyncActivity>(renderer, mappedInputManager);
+    if (!activity) {
+      LOG_ERR("OPDS", "OOM: startup sync activity");
+      activityManager.goHome(HomeMenuItem::NONE, needsWakeRefresh);
+    } else {
+      activityManager.replaceActivity(std::move(activity));
+    }
   } else if (resume == BootResume::Silent && snapshotTarget == SILENT_REBOOT_TARGET_READER &&
              !APP_STATE.openEpubPath.empty()) {
     activityManager.goToReader(APP_STATE.openEpubPath);

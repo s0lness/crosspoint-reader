@@ -194,7 +194,9 @@ void OpdsServerListActivity::handleSelection() {
     static const StrId toggleLabels[] = {StrId::STR_STATE_OFF, StrId::STR_STATE_ON};
     optionPopup.show(StrId::STR_OPDS_SYNC_ON_STARTUP, toggleLabels, 2, SETTINGS.opdsSyncOnStartup ? 1 : 0,
                      [this](int idx) {
-                       SETTINGS.opdsSyncOnStartup = static_cast<uint8_t>(idx);
+                       const auto value = static_cast<uint8_t>(idx);
+                       if (SETTINGS.opdsSyncOnStartup == value) return;
+                       SETTINGS.opdsSyncOnStartup = value;
                        SETTINGS.saveToFile();
                      });
     requestUpdate();
