@@ -187,7 +187,7 @@ inline std::vector<StrId> buildLongPressMenuValues() {
   // on it (it silently no-ops there; see the confirmLongPressed switch in
   // EpubReaderActivity.cpp). Reader Menu (home-key-hold only) shows on every
   // board for that reason; Footnotes always applies regardless of home key.
-  static constexpr StrId VALUES[] = {StrId::STR_KOSYNC,      StrId::STR_DISABLED,    StrId::STR_BOOKMARK_OPTION,
+  static constexpr StrId VALUES[] = {StrId::STR_KOSYNC,     StrId::STR_DISABLED,    StrId::STR_BOOKMARK_OPTION,
                                      StrId::STR_DICTIONARY, StrId::STR_READER_MENU, StrId::STR_FOOTNOTES};
   return {VALUES, VALUES + std::size(VALUES)};
 }

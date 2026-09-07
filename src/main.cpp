@@ -507,9 +507,9 @@ void setup() {
                             : isPersistedSleepWake ? BootResume::SplashlessWake
                                                    : BootResume::Splash;
   LOG_INF("MAIN", "Boot decision: isPersistedSleepWake=%d resume=%s", (int)isPersistedSleepWake,
-          resume == BootResume::Silent    ? "Silent"
+          resume == BootResume::Silent           ? "Silent"
           : resume == BootResume::SplashlessWake ? "SplashlessWake"
-                                                  : "Splash");
+                                                 : "Splash");
   bool allowFastInitialReaderRefresh = false;
   bool needsWakeRefresh = false;
 
